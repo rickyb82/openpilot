@@ -1,53 +1,52 @@
-
 Import('env', 'arch')
 
 cpp_path = [
-    "#selfdrive",
-    "#phonelibs/acado/include",
-    "#phonelibs/acado/include/acado",
-    "#phonelibs/qpoases/INCLUDE",
-    "#phonelibs/qpoases/INCLUDE/EXTRAS",
-    "#phonelibs/qpoases/SRC/",
-    "#phonelibs/qpoases",
-    "lib_mpc_export"]
+  "#selfdrive",
+  "#phonelibs/acado/include",
+  "#phonelibs/acado/include/acado",
+  "#phonelibs/qpoases/INCLUDE",
+  "#phonelibs/qpoases/INCLUDE/EXTRAS",
+  "#phonelibs/qpoases/SRC/",
+  "#phonelibs/qpoases",
+  "lib_mpc_export"
+]
 
-if arch != "aarch64":
-    env2 = env.Clone(CCFLAGS=[
-      "-g",
-      "-fPIC",
-      "-O2",
-      "-Wunused",
-      "-Wno-unknown-warning-option",
+if arch == "x86_64":
+    env2 = env.Clone()
+
+    env2['CCFLAGS'].remove("-Werror")
+    env2['CCFLAGS'] += [
       "-Wno-deprecated",
-      "-Wno-register",
-      "-Wno-inconsistent-missing-override",
-      "-Wno-c99-designator",
-      "-Wno-error=deprecated-declarations",
-      "-Wno-reorder-init-list"])
-    acado_libs = [File("#phonelibs/acado/x64/lib/libacado_toolkit.a"),
-                  File("#phonelibs/acado/x64/lib/libacado_casadi.a"),
-                  File("#phonelibs/acado/x64/lib/libacado_csparse.a")]
+      "-Wno-overloaded-shift-op-parentheses"
+    ]
+
+    acado_libs = [
+      File("#phonelibs/acado/x64/lib/libacado_toolkit.a"),
+      File("#phonelibs/acado/x64/lib/libacado_casadi.a"),
+      File("#phonelibs/acado/x64/lib/libacado_csparse.a")
+    ]
     env2.Program('generator', 'generator.cpp', LIBS=acado_libs, CPPPATH=cpp_path)
-    
-    targets = ['lib_mpc_export/acado_common.h',
-               'lib_mpc_export/acado_auxiliary_functions.h',
-               'lib_mpc_export/acado_auxiliary_functions.c',
-               'lib_mpc_export/acado_qpoases_interface.hpp',
-               'lib_mpc_export/acado_qpoases_interface.cpp',
-               'lib_mpc_export/acado_integrator.c']
-    command = 'generator'
-       
+
+    targets = [
+      'lib_mpc_export/acado_common.h',
+      'lib_mpc_export/acado_auxiliary_functions.h',
+      'lib_mpc_export/acado_auxiliary_functions.c',
+      'lib_mpc_export/acado_qpoases_interface.hpp',
+      'lib_mpc_export/acado_qpoases_interface.cpp',
+      'lib_mpc_export/acado_integrator.c'
+    ]
+
     target_files = File(targets)
-    command_file = File(command)
+    command_file = File('generator')
 
     env2.Command(target_files,
-                [command_file],
-                command_file.get_abspath())
+                 [command_file],
+                 command_file.get_abspath())
 
 mpc_files = [
-    "lateral_mpc.c",
-    Glob("lib_mpc_export/*.c"),
-    Glob("lib_mpc_export/*.cpp"),
+  "lateral_mpc.c",
+  Glob("lib_mpc_export/*.c"),
+  Glob("lib_mpc_export/*.cpp"),
 ]
 
 interface_dir = Dir('lib_mpc_export')
